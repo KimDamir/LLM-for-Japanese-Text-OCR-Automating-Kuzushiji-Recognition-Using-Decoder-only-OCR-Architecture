@@ -4,9 +4,9 @@ from typing import Optional, Union, Tuple, List, Literal
 class DTrOCRConfig:
     def __init__(
         self,
-        gpt_hf_model: str = 'rinna/japanese-gpt2-medium',
+        gpt_hf_model: str = 'rinna/japanese-gpt2-small',
         vit_hf_model: str = 'google/vit-base-patch16-224',
-        vocab_size: Optional[int] = 50257,
+        vocab_size: Optional[int] = 32000,
         max_position_embeddings: Optional[int] = 256,
         hidden_size: Optional[int] = 768,
         num_hidden_layers: Optional[int] = 12,

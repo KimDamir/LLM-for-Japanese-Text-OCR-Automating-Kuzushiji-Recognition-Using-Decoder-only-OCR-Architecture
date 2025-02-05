@@ -19,12 +19,12 @@ class DTrOCRProcessor:
         self.tokeniser = AutoTokenizer.from_pretrained(
             config.gpt_hf_model,
             add_bos_token=add_bos_token,
+            add_eos_token=add_eos_token,
             model_max_length=config.max_position_embeddings - int(
                 (config.image_size[0] / config.patch_size[0]) * (config.image_size[1] / config.patch_size[1])
             )
         )
-        self.tokeniser.pad_token = self.tokeniser.bos_token
-        self.tokeniser.add_eos_token = add_eos_token
+        self.tokeniser.do_lower_case = True
 
         # Bind a new method to gpt2_tokeniser
         self.tokeniser.build_inputs_with_special_tokens = modified_build_inputs_with_special_tokens.__get__(

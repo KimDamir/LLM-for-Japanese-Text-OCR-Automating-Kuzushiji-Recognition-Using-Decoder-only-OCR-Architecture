@@ -161,6 +161,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-data/
+examples/data/
 models/
 kkanji.tar
+preprocessed_data
+text_renderer/docker
+text_renderer/example_data
+text_renderer/docs
+text_renderer/image
