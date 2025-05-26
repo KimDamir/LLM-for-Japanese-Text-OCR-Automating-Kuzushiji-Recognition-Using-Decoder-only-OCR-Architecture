@@ -4,7 +4,7 @@ from typing import Optional, Tuple, Dict, Any
 
 from config import DTrOCRConfig
 from processor import DTrOCRProcessor
-from data import DTrOCRLMHeadModelOutput, DTrOCRModelOutput, DTrOCRProcessorOutput
+from dtrocr.data import DTrOCRLMHeadModelOutput, DTrOCRModelOutput, DTrOCRProcessorOutput
 
 from transformers.models.vit.modeling_vit import ViTPatchEmbeddings
 from transformers.generation.logits_process import LogitsProcessorList
@@ -19,6 +19,7 @@ from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,
     StopStringCriteria,
 )
+ 
 
 
 class DTrOCRModel(nn.Module):
@@ -131,7 +132,6 @@ class DTrOCRLMHeadModel(nn.Module):
     def __init__(self, config: DTrOCRConfig):
         super().__init__()
         self.config = config
-
         self.transformer = DTrOCRModel(config)
         self.language_model_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -144,7 +144,8 @@ class DTrOCRLMHeadModel(nn.Module):
         input_ids: torch.LongTensor,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         position_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        input_attention_mask: Optional[torch.Tensor] = None,
+        label_attention_mask: Optional[torch.Tensor] = None,
         use_cache: Optional[bool] = False,
         labels: Optional[torch.LongTensor] = None,
     ) -> DTrOCRLMHeadModelOutput:
@@ -153,7 +154,7 @@ class DTrOCRLMHeadModel(nn.Module):
             input_ids=input_ids,
             past_key_values=past_key_values,
             position_ids=position_ids,
-            attention_mask=attention_mask,
+            attention_mask=input_attention_mask,
             use_cache=use_cache
         )
         logits = self.language_model_head(transformer_output.hidden_states)
@@ -172,10 +173,9 @@ class DTrOCRLMHeadModel(nn.Module):
             label_matches = shift_labels.view(-1) == torch.argmax(
                 torch.nn.functional.softmax(shift_logits.view(-1, shift_logits.size(-1)), dim=-1), dim=-1
             )
-
-            # reduce loss
-            if attention_mask is not None:
-                mask = attention_mask[..., 1:].reshape(-1)
+        # reduce loss
+            if label_attention_mask is not None:
+                mask = label_attention_mask[..., 1:].reshape(-1)
 
                 loss = (mask * loss).sum() / mask.sum()
                 accuracy = (mask * label_matches).sum() / mask.sum()
@@ -202,7 +202,7 @@ class DTrOCRLMHeadModel(nn.Module):
         batch_size = inputs.input_ids.shape[0]
         model_kwargs = {
             'pixel_values': inputs.pixel_values,
-            'attention_mask': inputs.attention_mask,
+            'attention_mask': inputs.input_attention_mask,
             'use_cache': use_cache
         }
         generation_config = GenerationConfig(
@@ -292,8 +292,7 @@ class DTrOCRLMHeadModel(nn.Module):
             next_token_scores = logits_processor(input_ids, next_token_logits)
 
             # token selection
-            next_tokens = torch.argmax(next_token_scores, dim=-1)
-
+            next_tokens = torch.argmax(torch.nn.functional.softmax(next_token_scores), dim=-1)
             # finished sentences should have their next token be a padding token
             if has_eos_stopping_criteria:
                 next_tokens = next_tokens * unfinished_sequences + pad_token_id * (1 - unfinished_sequences)
@@ -303,7 +302,6 @@ class DTrOCRLMHeadModel(nn.Module):
 
             # update generated ids, model inputs, and length for next step
             model_kwargs = self._update_model_kwargs_for_generation(outputs, model_kwargs)
-
             unfinished_sequences = unfinished_sequences & ~stopping_criteria(input_ids, None)
             this_peer_finished = unfinished_sequences.max() == 0
 
@@ -527,7 +525,7 @@ class DTrOCRLMHeadModel(nn.Module):
             'pixel_values': kwargs['pixel_values'],
             'use_cache': kwargs.get("use_cache"),
             'labels': kwargs.get("labels"),
-            'attention_mask': attention_mask,
+            'input_attention_mask': attention_mask,
             'position_ids': position_ids
         }
 

@@ -10,17 +10,22 @@ image = Image.open(path_to_image).convert('RGB')
 config = DTrOCRConfig()
 model = DTrOCRLMHeadModel(config)
 processor = DTrOCRProcessor(DTrOCRConfig())
-model = torch.compile(model)
-model.load_state_dict(torch.load('models/Version1.pt'))
-model.eval()        # set model to evaluation mode for deterministic behaviour
-
 
 inputs = processor(
     images=image,
-    texts='',
-    return_tensors="pt"
+    texts='Hello',
+    return_tensors="pt",
+    return_labels=True
 )
+print(inputs.input_attention_mask.shape)
+print(inputs.label_attention_mask.shape)
+print(inputs.labels.shape)
+print(inputs.pixel_values.shape)
+print(inputs.input_ids)
 
+model = torch.compile(model)
+model.load_state_dict(torch.load('models/Version2.pt'))
+model.eval()        # set model to evaluation mode for deterministic behaviour
 model_output = model.generate(
     inputs=inputs, 
     processor=processor, 
@@ -30,3 +35,11 @@ model_output = model.generate(
 
 predicted_text = processor.tokeniser.decode(model_output[0], skip_special_tokens=False)
 print('Predicted text: ', predicted_text)
+print(model_output.past_key_values.shape)
+
+position_ids = inputs.input_attention_mask.long().cumsum(-1) - 1
+position_ids.masked_fill_(inputs.input_attention_mask == 0, 1)
+if model_output.past_key_values:
+    position_ids = position_ids[:, -inputs.input_ids.shape[1]:]
+    
+print(position_ids.shape)

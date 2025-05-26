@@ -1,6 +1,5 @@
 from typing import Optional, Union, Tuple, List, Literal
 
-
 class DTrOCRConfig:
     def __init__(
         self,

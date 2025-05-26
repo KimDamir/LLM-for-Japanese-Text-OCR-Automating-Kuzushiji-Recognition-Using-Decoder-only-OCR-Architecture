@@ -41,10 +41,13 @@ class DTrOCRProcessor:
         *args,
         **kwargs
     ) -> DTrOCRProcessorOutput:
-        text_inputs = self.tokeniser(
+        text_labels = self.tokeniser(
             texts, padding=padding, *args, **kwargs
         ) if texts is not None else None
-
+        
+        text_inputs = self.tokeniser(
+            '', padding=padding, *args, **kwargs
+        )
         image_inputs = self.vit_processor(
             images, input_data_format=input_data_format, *args, **kwargs
         ) if images is not None else None
@@ -52,8 +55,9 @@ class DTrOCRProcessor:
         return DTrOCRProcessorOutput(
             pixel_values=image_inputs["pixel_values"] if images is not None else None,
             input_ids=text_inputs['input_ids'] if texts is not None else None,
-            attention_mask=text_inputs['attention_mask'] if texts is not None else None,
-            labels=text_inputs['input_ids'] if texts is not None and return_labels else None
+            input_attention_mask=text_inputs['attention_mask'] if texts is not None else None,
+            label_attention_mask=text_labels['attention_mask'] if texts is not None and return_labels else None,
+            labels=text_labels['input_ids'] if texts is not None and return_labels else None
         )
 
 

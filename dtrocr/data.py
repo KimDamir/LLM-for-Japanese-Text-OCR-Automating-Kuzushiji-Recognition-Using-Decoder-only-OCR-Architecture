@@ -1,9 +1,8 @@
 import torch
 import numpy as np
-
+import functools
 from dataclasses import dataclass
 from typing import Optional, Union, List
-
 
 @dataclass
 class DTrOCRModelOutput:
@@ -23,5 +22,7 @@ class DTrOCRLMHeadModelOutput:
 class DTrOCRProcessorOutput:
     pixel_values: Optional[torch.FloatTensor] = None
     input_ids: Optional[Union[torch.LongTensor, np.ndarray, List[int]]] = None
-    attention_mask: Optional[Union[torch.FloatTensor, np.ndarray, List[int]]] = None
+    input_attention_mask: Optional[Union[torch.FloatTensor, np.ndarray, List[int]]] = None
+    label_attention_mask: Optional[Union[torch.FloatTensor, np.ndarray, List[int]]] = None
     labels: Optional[Union[torch.LongTensor, np.ndarray, List[int]]] = None
+    

@@ -17,17 +17,18 @@ def augment_image(image, N, M):
     ])
     return(augmenter(image))
 
-def augment_dataset(data_dict, num_images, N, M):
+def augment_dataset(data_dict, num_images, N, M, pathname=None):
     # dir — the name of directory where data is stored
     # num_images — the number of augmented versions of each image that needs to be created.
     # N, M — parameters for augment_image's randAugment, number of layers and magnitude
     for filename, transcription in data_dict.copy().items():
-        image = Image.open(filename)
+        image = Image.open(pathname+filename+'.jpg') if pathname != None else Image.open(filename)
         for i in range(num_images):
-            idx = filename.index('.png')
+            idx = len(filename) if pathname != None else filename.index('.png')
             aug_name =  filename[:idx] + '-' + str(i) + filename[idx:]
             augmented_image = augment_image(image, N, M)
-            save_image(augmented_image, aug_name)
+            save_image(augmented_image, pathname+aug_name+'.jpg') if pathname != None else save_image(augmented_image, aug_name)
             data_dict[aug_name] = transcription
+            
                 
     
