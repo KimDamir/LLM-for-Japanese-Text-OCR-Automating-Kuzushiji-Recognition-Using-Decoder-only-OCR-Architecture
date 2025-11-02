@@ -18,6 +18,7 @@ from text_renderer.utils.math_utils import PerspectiveTransform
 from text_renderer.utils.bbox import BBox
 from text_renderer.utils.font_text import FontText
 from text_renderer.utils.types import FontColor, is_list
+from random import uniform
 
 
 class Render:
@@ -211,8 +212,8 @@ class Render:
             (
                 x_offset,
                 y_offset,
-                x_offset + transformed_text_mask.width,
-                y_offset + transformed_text_mask.height,
+                x_offset + uniform(1, 2)*transformed_text_mask.width,
+                y_offset + uniform(1, 2)*transformed_text_mask.height,
             )
         )
         if self.cfg.return_bg_and_mask:

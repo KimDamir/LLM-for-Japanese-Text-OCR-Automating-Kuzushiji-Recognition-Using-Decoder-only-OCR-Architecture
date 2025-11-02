@@ -19,22 +19,22 @@ def print_effects_data():
         save_dir='../../examples/preprocessed_data/text_renderer',
         render_cfg=RenderCfg(
             bg_dir=CURRENT_DIR / "bg",
-            height=32,
+            height=-1,
             perspective_transform=NormPerspectiveTransformCfg(20, 20, 1.5),
             corpus=CharCorpus(
                 CharCorpusCfg(
                     text_paths=[CURRENT_DIR / "corpus" / "corpus.txt"],
                     font_dir=CURRENT_DIR / "font",
-                    font_size=(20, 30),
+                    font_size=(10, 30),
                     length=(1,8),
                     chars_file=CURRENT_DIR / "corpus" / "charset.txt",
                     filter_by_chars=True,
-                    filter_font=True
+                    filter_font=True,
+                    text_color_cfg=SimpleTextColorCfg((200, 255))
                 )
             ),
             corpus_effects=Effects(Line(0.15, thickness=(1, 3))),
-            gray=False,
-            text_color_cfg=SimpleTextColorCfg((200, 255)),
+            gray=False
         ),
     )
     
@@ -44,7 +44,8 @@ def color_data():
         save_dir='../../examples/preprocessed_data/text_renderer',
         render_cfg=RenderCfg(
             bg_dir=CURRENT_DIR / "bg",
-            height=32,
+            height=-1,
+            perspective_transform=NormPerspectiveTransformCfg(20, 20, 1.5),
             corpus=CharCorpus(
                 CharCorpusCfg(
                     text_paths=[CURRENT_DIR / "corpus" / "corpus.txt"],
@@ -53,11 +54,11 @@ def color_data():
                     length=(1,8),
                     chars_file=CURRENT_DIR / "corpus" / "charset.txt",
                     filter_by_chars=True,
-                    filter_font=True
+                    filter_font=True,
+                    text_color_cfg=SimpleTextColorCfg((150, 255))
                 )
             ),
-            gray=False,
-            text_color_cfg=SimpleTextColorCfg((150, 255)),
+            gray=False
         ),
     )
     
@@ -67,7 +68,7 @@ def print_data():
         save_dir='../../examples/preprocessed_data/text_renderer_print',
         render_cfg=RenderCfg(
             bg_dir=CURRENT_DIR / "bg",
-            height=32,
+            height=-1,
             corpus=CharCorpus(
                 CharCorpusCfg(
                     text_paths=[CURRENT_DIR / "corpus" / "corpus.txt"],
@@ -76,11 +77,11 @@ def print_data():
                     length=(1,8),
                     chars_file=CURRENT_DIR / "corpus" / "charset.txt",
                     filter_by_chars=True,
-                    filter_font=True
+                    filter_font=True,
+                    text_color_cfg=BlackTextColorCfg()
                 )
             ),
-            gray=False,
-            text_color_cfg=BlackTextColorCfg(),
+            gray=False
         ),
     )
     
@@ -90,7 +91,8 @@ def vertical_data():
         save_dir='../../examples/preprocessed_data/text_renderer_vertical',
         render_cfg=RenderCfg(
             bg_dir=CURRENT_DIR / "bg",
-            height=32,
+            height=-1,
+            perspective_transform=NormPerspectiveTransformCfg(20, 20, 1.5),
             corpus=CharCorpus(
                 CharCorpusCfg(
                     text_paths=[CURRENT_DIR / "corpus" / "corpus.txt"],
@@ -100,14 +102,14 @@ def vertical_data():
                     length=(1,8),
                     chars_file=CURRENT_DIR / "corpus" / "charset.txt",
                     filter_by_chars=True,
-                    filter_font=True
+                    filter_font=True,
+                    text_color_cfg=SimpleTextColorCfg((200, 255))
                 )
             ),
-            gray=False,
-            text_color_cfg=BlackTextColorCfg(),
+            gray=False
         ),
     )
 
 
 
-configs = [print_data(), color_data(), vertical_data()]
+configs = [color_data()]

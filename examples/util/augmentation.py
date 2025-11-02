@@ -10,10 +10,10 @@ def augment_image(image, N, M):
     augmenter = v2.Compose([
         v2.ToImage(),
         v2.RandomInvert(0.2),
-        v2.GaussianBlur(kernel_size=(1, 3), sigma=(0.1, 1.)),
+        # v2.GaussianBlur(kernel_size=(1, 3), sigma=(0.1, 1.)),
         v2.RandAugment(N, M),
         v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=[0.1926, 0.1926, 0.1926], std=[0.3343, 0.3343, 0.3343]),
+        # v2.Normalize(mean=[0.1926, 0.1926, 0.1926], std=[0.3343, 0.3343, 0.3343]),
     ])
     return(augmenter(image))
 
