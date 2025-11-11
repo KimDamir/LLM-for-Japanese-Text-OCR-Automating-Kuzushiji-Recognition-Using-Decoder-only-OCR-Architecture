@@ -1,5 +1,5 @@
 import torch
-
+import csv
 
 def save_checkpoint(model, optimizer, save_path, epoch):
     torch.save({
@@ -15,3 +15,9 @@ def load_checkpoint(model, optimizer, load_path):
     epoch = checkpoint['epoch']
     
     return model, optimizer, epoch
+
+def write_report(MODEL, DATASET, train_losses, train_accuracies, test_losses, test_accuracies):
+    with open('report '+MODEL+'on '+DATASET+'.csv', 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow('Train loss', 'Train accurace', 'Test loss', 'Test accuracy')
+        writer.writerows(zip(train_losses, train_accuracies, test_losses, test_accuracies))
