@@ -2,8 +2,8 @@ import torch
 from torch import nn, Tensor
 from typing import Optional, Tuple, Dict, Any
 
-from config import DTrOCRConfig
-from processor import DTrOCRProcessor
+from dtrocr.config import DTrOCRConfig
+from dtrocr.processor import DTrOCRProcessor
 from dtrocr.data import DTrOCRLMHeadModelOutput, DTrOCRModelOutput, DTrOCRProcessorOutput
 
 from transformers.models.vit.modeling_vit import ViTPatchEmbeddings
@@ -203,6 +203,8 @@ class DTrOCRLMHeadModel(nn.Module):
         model_kwargs = {
             'pixel_values': inputs.pixel_values,
             'attention_mask': inputs.input_attention_mask,
+            'label_attention_mask': inputs.label_attention_mask,
+            'labels': inputs.labels,
             'use_cache': use_cache
         }
         generation_config = GenerationConfig(
@@ -250,17 +252,20 @@ class DTrOCRLMHeadModel(nn.Module):
             )
 
         elif num_beams == 1:
-            result = self._sample(
+            # result = self._sample(
+            #     input_ids,
+            #     logits_processor=LogitsProcessorList(),
+            #     stopping_criteria=prepared_stopping_criteria,
+            #     generation_config=generation_config,
+            #     **model_kwargs,
+            # )
+            result, accuracy = self._simple_sample(
                 input_ids,
-                logits_processor=LogitsProcessorList(),
-                stopping_criteria=prepared_stopping_criteria,
-                generation_config=generation_config,
-                **model_kwargs,
+                **model_kwargs
             )
         else:
             raise ValueError("num_beams must be a positive integer.")
-
-        return result
+        return result, accuracy
 
     def _sample(
         self,
@@ -290,9 +295,12 @@ class DTrOCRLMHeadModel(nn.Module):
 
             # pre-process distribution
             next_token_scores = logits_processor(input_ids, next_token_logits)
-
+            
+            # Apply penalty to eos_token
+            # next_token_scores[:, generation_config.eos_token_id] -= 10.0
+            # next_token_scores[:, 9] -= 3.0
             # token selection
-            next_tokens = torch.argmax(torch.nn.functional.softmax(next_token_scores), dim=-1)
+            next_tokens = torch.argmax(next_token_scores, dim=-1)
             # finished sentences should have their next token be a padding token
             if has_eos_stopping_criteria:
                 next_tokens = next_tokens * unfinished_sequences + pad_token_id * (1 - unfinished_sequences)
@@ -310,6 +318,42 @@ class DTrOCRLMHeadModel(nn.Module):
             del outputs
 
         return input_ids
+    
+    def _simple_sample(
+        self,
+        input_ids: torch.Tensor,
+        **model_kwargs
+    ) -> torch.Tensor:
+        # init values
+
+        # keep track of which sequences are already finished
+        batch_size = input_ids.shape[0]
+        # model_kwargs = self._get_initial_cache_position(input_ids, model_kwargs)
+        # model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)
+        model_inputs = {
+            'pixel_values': model_kwargs["pixel_values"],
+            'input_ids': input_ids,
+            'input_attention_mask': model_kwargs["attention_mask"],
+            'label_attention_mask': model_kwargs["label_attention_mask"],
+            'labels': model_kwargs["labels"]
+        }
+
+        outputs = self(**model_inputs)
+
+        # Clone is needed to avoid keeping a hanging ref to outputs.logits which may be very large for first
+        # iteration (the clone itself is always small)
+        next_token_logits = outputs.logits[:, -1, :].clone()        
+        
+        next_tokens = torch.argmax(
+            torch.nn.functional.softmax(next_token_logits.view(-1, next_token_logits.size(-1)), dim=-1), dim=-1
+        )
+        
+        input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
+        
+        # update generated ids, model inputs, and length for next step
+        model_kwargs = self._update_model_kwargs_for_generation(outputs, model_kwargs)
+        
+        return input_ids, outputs.accuracy
 
     def _beam_search(
         self,
@@ -350,6 +394,7 @@ class DTrOCRLMHeadModel(nn.Module):
             # Clone is needed to avoid keeping a hanging ref to outputs.logits which may be very large for first
             # iteration (the clone itself is always small)
             next_token_logits = outputs.logits[:, -1, :].clone()
+            
             next_token_scores = nn.functional.log_softmax(
                 next_token_logits, dim=-1
             )  # (batch_size * num_beams, vocab_size)
@@ -560,3 +605,4 @@ class DTrOCRLMHeadModel(nn.Module):
         model_kwargs = _expand_dict_for_generation(model_kwargs)
 
         return input_ids, model_kwargs
+    

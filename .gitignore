@@ -172,3 +172,5 @@ text_renderer/image
 ja.txt.xz
 ja.txt
 corpus.txt
+kaggle_kuzushiji/
+checkpoints/

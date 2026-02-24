@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import csv
 
@@ -17,7 +18,19 @@ def load_checkpoint(model, optimizer, load_path):
     return model, optimizer, epoch
 
 def write_report(MODEL, DATASET, train_losses, train_accuracies, test_losses, test_accuracies):
-    with open('report '+MODEL+'on '+DATASET+'.csv', 'w') as f:
+    with open('reports/' + 'report '+MODEL+' on '+DATASET+'.csv', 'w') as f:
         writer = csv.writer(f, delimiter='\t')
-        writer.writerow('Train loss', 'Train accurace', 'Test loss', 'Test accuracy')
-        writer.writerows(zip(train_losses, train_accuracies, test_losses, test_accuracies))
+        writer.writerow(['Train loss', 'Train accuracy', 'Test loss', 'Test accuracy'])
+        rows = zip(train_losses, train_accuracies, test_losses, test_accuracies)
+        for row in rows:
+            writer.writerow(row)
+            
+def write_class_report(MODEL, weighted_acc, acc, classes_count, filtered_weighted_acc):
+    path = Path('class_accuracy/' + MODEL)
+    path.mkdir(parents=True, exist_ok=True)
+    with open('class_accuracy/' +MODEL+'/report.csv', 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(['Weighted accuracy:', 'Accuracy', 'Total classes', 'Filtered weighted accuracy'])
+        rows = zip([weighted_acc], [acc], [classes_count], [filtered_weighted_acc])
+        for row in rows:
+            writer.writerow(row)

@@ -2,8 +2,8 @@ from transformers import AutoImageProcessor, AutoTokenizer
 
 from PIL import Image
 from typing import List, Union
-from config import DTrOCRConfig
-from data import DTrOCRProcessorOutput
+from dtrocr.config import DTrOCRConfig
+from dtrocr.data import DTrOCRProcessorOutput
 
 
 class DTrOCRProcessor:
@@ -25,6 +25,8 @@ class DTrOCRProcessor:
             )
         )
         self.tokeniser.do_lower_case = True
+        self.tokeniser.add_bos_token = add_bos_token
+        self.tokeniser.add_eos_token = add_eos_token
 
         # Bind a new method to gpt2_tokeniser
         self.tokeniser.build_inputs_with_special_tokens = modified_build_inputs_with_special_tokens.__get__(

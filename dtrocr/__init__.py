@@ -1,5 +1,4 @@
-import os
-import sys
-
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from .config import *
+from .data import *
+from .model import *
+from .processor import *

@@ -112,4 +112,4 @@ def vertical_data():
 
 
 
-configs = [color_data()]
+configs = [vertical_data()]

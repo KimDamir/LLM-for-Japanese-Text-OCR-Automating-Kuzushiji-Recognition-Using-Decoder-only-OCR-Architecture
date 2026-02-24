@@ -4,6 +4,8 @@ from torchvision.transforms import v2
 from torchvision.utils import save_image
 from PIL import Image
 from pathlib import Path
+import tqdm
+import re
 
 
 def augment_image(image, N, M):
@@ -21,13 +23,35 @@ def augment_dataset(data_dict, num_images, N, M, pathname=None):
     # dir — the name of directory where data is stored
     # num_images — the number of augmented versions of each image that needs to be created.
     # N, M — parameters for augment_image's randAugment, number of layers and magnitude
-    for filename, transcription in data_dict.copy().items():
+    for filename, transcription in tqdm.tqdm(data_dict.copy().items(), desc='Augmenting the dataset'):
         image = Image.open(pathname+filename+'.jpg') if pathname != None else Image.open(filename)
         for i in range(num_images):
             idx = len(filename) if pathname != None else filename.index('.png')
-            aug_name =  filename[:idx] + '-' + str(i) + filename[idx:]
+            idx2 = 0 if pathname != None else filename.index('/')
+            pattern = re.compile("\/kkanji|\/K49")
+            if pathname != None:
+                idx3 = 0
+            else:
+                match = pattern.search(filename)
+                idx3 = match.start() + len(match.group())
+            aug_name =  'augmented/' + filename[:idx] + '-' + str(i) + filename[idx:] if pathname != None \
+                else filename[:idx2] + '/' + filename[idx2:idx3] + '/augmented/' + filename[idx3:idx] + '-' + str(i) + filename[idx:]
             augmented_image = augment_image(image, N, M)
             save_image(augmented_image, pathname+aug_name+'.jpg') if pathname != None else save_image(augmented_image, aug_name)
+            data_dict[aug_name] = transcription
+            
+def augment_kuzushiji_kaggle(data_dict, num_images, N, M):
+    # dir — the name of directory where data is stored
+    # num_images — the number of augmented versions of each image that needs to be created.
+    # N, M — parameters for augment_image's randAugment, number of layers and magnitude
+    for filename, transcription in tqdm.tqdm(data_dict.copy().items(), desc='Augmenting the dataset'):
+        image = Image.open(filename)
+        for i in range(num_images):
+            idx = filename.index('.jpg')
+            idx2 = filename.index('images/')
+            aug_name =  filename[:idx2+7] + 'augmented/' + filename[idx2+7:idx] + '-' + str(i) + filename[idx:]
+            augmented_image = augment_image(image, N, M)
+            save_image(augmented_image, aug_name)
             data_dict[aug_name] = transcription
             
                 
