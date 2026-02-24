@@ -296,10 +296,6 @@ class DTrOCRLMHeadModel(nn.Module):
             # pre-process distribution
             next_token_scores = logits_processor(input_ids, next_token_logits)
             
-            # Apply penalty to eos_token
-            # next_token_scores[:, generation_config.eos_token_id] -= 10.0
-            # next_token_scores[:, 9] -= 3.0
-            # token selection
             next_tokens = torch.argmax(next_token_scores, dim=-1)
             # finished sentences should have their next token be a padding token
             if has_eos_stopping_criteria:
