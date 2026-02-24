@@ -6,6 +6,7 @@ matplotlib
 scikit-learn
 protobuf
 jiwer
+# This one is important. pip -e install dtrocr in base directory for development mode installation.
 # file:////home/kane/DTrOCR/dtrocr
 #cairosvg #pip
 # pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
